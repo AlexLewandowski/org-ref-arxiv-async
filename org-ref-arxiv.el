@@ -159,7 +159,7 @@ Returns a formatted BibTeX entry."
     (goto-char (point-max))
     (when (not (looking-at "^")) (insert "\n"))
     (insert (arxiv-get-bibtex-entry-via-arxiv-api arxiv-number))
-    (bibtex-clean-bibtex-entry)
+    (bibtex-clean-entry)
     (goto-char (point-max))
     (when (not (looking-at "^")) (insert "\n"))
     (save-buffer)))
