@@ -39,7 +39,6 @@
 (defvar org-ref-pdf-directory)
 
 (declare-function parsebib-find-bibtex-dialect "parsebib")
-(declare-function org-ref-clean-bibtex-entry "org-ref-core")
 ;; this is a C function
 (declare-function libxml-parse-xml-region "xml")
 
@@ -160,7 +159,7 @@ Returns a formatted BibTeX entry."
     (goto-char (point-max))
     (when (not (looking-at "^")) (insert "\n"))
     (insert (arxiv-get-bibtex-entry-via-arxiv-api arxiv-number))
-    (org-ref-clean-bibtex-entry)
+    (bibtex-clean-bibtex-entry)
     (goto-char (point-max))
     (when (not (looking-at "^")) (insert "\n"))
     (save-buffer)))
