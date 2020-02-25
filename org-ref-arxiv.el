@@ -178,12 +178,8 @@ Returns a formatted BibTeX entry."
                    (search-forward-regexp
                     "name=\\\"citation_pdf_url\\\" content=\\\"\\(.*\\)\\\"")
                    (match-string 1))))
-    (url-copy-file pdf-url pdf)
-    ;; now check if we got a pdf
-    (if (org-ref-pdf-p pdf)
-        (message (concat "Successfully downloaded file: " pdf))
-      (delete-file pdf)
-      (message "Error downloading arxiv pdf %s" pdf-url))))
+   (start-process "" nil "wget" "--user-agent='NOT WGET'" pdf-url (concat "-O" pdf))
+    ))
 
 ;;;###autoload
 (defun arxiv-get-pdf-add-bibtex-entry (arxiv-number bibfile pdfdir)
