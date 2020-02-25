@@ -230,6 +230,7 @@ key."
               (setq key (bibtex-read-key "Duplicate Key found, edit: " key))))
         (setq key (bibtex-read-key "Key not found, insert: ")))
       (insert key)
+      (save-some-buffers bibfile)
       (arxiv-get-pdf arxiv-number (concat pdfdir key ".pdf")))))
 
 (provide 'org-ref-arxiv)
