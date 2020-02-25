@@ -202,7 +202,7 @@ key."
           "PDF directory: "
           org-ref-pdf-directory)))
   (string-match "[0-9]+.[0-9]+" arxiv-number)
-  (setq arxiv-number (match-string 1 arxiv-number))
+  (setq arxiv-number (match-string 0 arxiv-number))
   (arxiv-add-bibtex-entry arxiv-number bibfile)
 
   (save-window-excursion
