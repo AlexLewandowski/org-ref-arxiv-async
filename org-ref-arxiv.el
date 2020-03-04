@@ -42,6 +42,141 @@
 ;; this is a C function
 (declare-function libxml-parse-xml-region "xml")
 
+
+;;
+;; Ripped functions from org-ref-bibtex
+;;
+
+(defcustom bibtex-sort-order
+  '(("article"  . ("author" "title" "journal" "volume" "number" "pages" "year" "doi" "url"))
+    ("inproceedings" . ("author" "title" "booktitle" "year" "volume" "number" "pages" "doi" "url"))
+    ("book" . ("author" "title" "year" "publisher" "url")))
+  "A-list of bibtex entry fields and the order to sort an entry with.
+\(entry-type . (list of fields). This is used in
+`org-ref-sort-bibtex-entry'. Entry types not listed here will
+have fields sorted alphabetically."
+  :type '(alist :key-type (string) :value-type (repeat string)))
+
+;;;###autoload
+(defun clean-and-sort-bibtex-entry ()
+  "Sort fields of entry in standard order."
+  (interactive)
+  (bibtex-beginning-of-entry)
+  (let* ((entry (bibtex-parse-entry))
+         (entry-fields)
+         (other-fields)
+         (type (cdr (assoc "=type=" entry)))
+         (key (cdr (assoc "=key=" entry)))
+  (field-order (cdr (assoc (if type (downcase type))
+                            bibtex-sort-order))))
+
+    ;; these are the fields we want to order that are in this entry
+    (setq entry-fields (mapcar (lambda (x) (car x)) entry))
+    ;; we do not want to reenter these fields
+    (setq entry-fields (remove "=key=" entry-fields))
+    (setq entry-fields (remove "=type=" entry-fields))
+
+    ;;these are the other fields in the entry, and we sort them alphabetically.
+    (setq other-fields
+   (sort (-remove (lambda(x) (member x field-order)) entry-fields)
+  'string<))
+
+    (save-restriction
+      (bibtex-kill-entry)
+      (insert
+       (concat "@" type "{" key ",\n"
+        (mapconcat
+         (lambda (field)
+    (when (member field entry-fields)
+      (format "%s = %s,"
+       field
+       (cdr (assoc field entry)))))
+         field-order "\n")
+        ;; now add the other fields
+        (mapconcat
+         (lambda (field)
+    (cl-loop for (f . v) in entry concat
+      (when (string= f field)
+        (format "%s = %s,\n" f v))))
+         (-uniq other-fields) "\n")
+        "\n}\n\n"))
+      (bibtex-find-entry key)
+      (bibtex-fill-entry)
+      (bibtex-clean-entry)))
+  )
+
+;;;###autoload
+(defun bibtex-set-field (field value &optional nodelim)
+  "Set FIELD to VALUE in bibtex file.  create field if it does not exist.
+Optional argument NODELIM see `bibtex-make-field'."
+  (interactive "sfield: \nsvalue: ")
+  (bibtex-beginning-of-entry)
+  (let ((found))
+    (if (setq found (bibtex-search-forward-field field t))
+        ;; we found a field
+        (progn
+          (goto-char (car (cdr found)))
+          (when value
+            (bibtex-kill-field)
+            (bibtex-make-field field nil nil nodelim)
+            (backward-char)
+            (insert value)))
+      ;; make a new field
+      (bibtex-beginning-of-entry)
+      (forward-line) (beginning-of-line)
+      (bibtex-next-field nil)
+      (forward-char)
+      (bibtex-make-field field nil nil nodelim)
+      (backward-char)
+      (insert value))))
+
+;;;###autoload
+(defun bibtex-set-keywords (keywords &optional arg)
+  "Add KEYWORDS to a bibtex entry.
+If KEYWORDS is a list, it is converted to a comma-separated
+string.  The KEYWORDS are added to the beginning of the
+field.  Otherwise KEYWORDS should be a string of comma-separate
+keywords.  Optional argument ARG prefix arg to replace keywords."
+  (interactive
+   (list
+    (completing-read "Keyword: " (bibtex-keywords))
+    current-prefix-arg))
+  (bibtex-set-field
+   "keywords"
+   (if arg
+       ;; replace with arg
+       (if (listp keywords)
+           (mapconcat 'identity keywords ", ")
+         keywords)
+     ;; else concatentate
+     (concat
+      (if (listp keywords)
+          (mapconcat 'identity keywords ", ")
+        keywords)
+      (when (not (string= "" (bibtex-autokey-get-field "keywords")))
+        (concat ", "  (bibtex-autokey-get-field "keywords"))))))
+  (when (buffer-file-name)
+    (save-buffer)))
+
+
+;;;###autoload
+(defun bibtex-keywords ()
+  "Get keywords defined in current bibtex file.
+These are in the keywords field, and are comma or semicolon separated."
+  (save-excursion
+    (goto-char (point-min))
+    (let (keywords kstring)
+      (while (re-search-forward "^\\s-*keywords.*{\\([^}]+\\)}" nil t)
+        ;; TWS - remove newlines/multiple spaces:
+        (setq kstring (replace-regexp-in-string
+                       "[ \t\n]+" " "
+                       (match-string 1)))
+        (mapc
+         (lambda (v)
+           (add-to-list 'keywords v t))
+         (split-string kstring "\\(,\\|;\\)[ \n]*\\|{\\|}" t)))
+      keywords)))
+
 ;;* The org-mode link
 ;; this just makes a clickable link that opens the entry.
 ;; example: arxiv:cond-mat/0410285
@@ -159,7 +294,7 @@ Returns a formatted BibTeX entry."
     (goto-char (point-max))
     (when (not (looking-at "^")) (insert "\n"))
     (insert (arxiv-get-bibtex-entry-via-arxiv-api arxiv-number))
-    (bibtex-clean-entry)
+    (clean-and-sort-bibtex-entry)
     (goto-char (point-max))
     (when (not (looking-at "^")) (insert "\n"))
     (save-buffer)))
