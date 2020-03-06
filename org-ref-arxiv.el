@@ -103,6 +103,33 @@ have fields sorted alphabetically."
       (bibtex-find-entry key)
       (bibtex-fill-entry)
       (bibtex-clean-entry)))
+
+  "Replace the key in the entry.
+Prompts for replacement if the new key duplicates one already in
+the file, unless ALLOW-DUPLICATE-KEYS is non-nil."
+  (let ((key
+        (bibtex-generate-autokey)))
+    ;; remove any \\ in the key
+    (setq key (replace-regexp-in-string "\\\\" "" key))
+    ;; first we delete the existing key
+    (bibtex-beginning-of-entry)
+    (re-search-forward bibtex-entry-maybe-empty-head)
+    (if (match-beginning bibtex-key-in-head)
+ (delete-region (match-beginning bibtex-key-in-head)
+         (match-end bibtex-key-in-head)))
+    ;; check if the key is in the buffer
+    (when (and (not nil)
+               (save-excursion
+                 (bibtex-search-entry key)))
+      (save-excursion
+ (bibtex-search-entry key)
+ (bibtex-copy-entry-as-kill)
+ (switch-to-buffer-other-window "*duplicate entry*")
+ (bibtex-yank))
+      (setq key (bibtex-read-key "Duplicate Key found, edit: " key)))
+
+    (insert key)
+    (kill-new key))
   )
 
 ;;;###autoload
@@ -241,7 +268,7 @@ These are in the keywords field, and are comma or semicolon separated."
   abstract = {%s},
   url = {%s},
 }"
-	"Template for BibTeX entries of arXiv articles.")
+ "Template for BibTeX entries of arXiv articles.")
 
 
 (defun arxiv-get-bibtex-entry-via-arxiv-api (arxiv-number)
@@ -266,8 +293,8 @@ Returns a formatted BibTeX entry."
            (temp-bibtex (format arxiv-entry-format-string "" title names year arxiv-number category abstract url))
            (key (with-temp-buffer
                   (insert temp-bibtex)
-		  (bibtex-mode)
-		  (bibtex-set-dialect (parsebib-find-bibtex-dialect) t)
+    (bibtex-mode)
+    (bibtex-set-dialect (parsebib-find-bibtex-dialect) t)
                   (bibtex-generate-autokey))))
       (format arxiv-entry-format-string key title names year arxiv-number category abstract url))))
 
