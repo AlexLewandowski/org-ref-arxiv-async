@@ -392,5 +392,5 @@ key."
       (save-some-buffers bibfile)
       (arxiv-get-pdf arxiv-number (concat pdfdir key ".pdf")))))
 
-(provide 'org-ref-arxiv)
+(provide 'org-ref-arxiv-async)
 ;;; org-ref-arxiv.el ends here
