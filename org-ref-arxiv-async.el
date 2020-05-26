@@ -307,7 +307,7 @@ Returns a formatted BibTeX entry."
 
 
 ;;;###autoload
-(defun arxiv-add-bibtex-entry (arxiv-number bibfile)
+(defun arxiv-add-bibtex-entry-async (arxiv-number bibfile)
   "Add bibtex entry for ARXIV-NUMBER to BIBFILE."
   (interactive
    (list (read-string "arxiv: ")
@@ -361,7 +361,7 @@ key."
           org-ref-pdf-directory)))
   (string-match "[0-9]+.[0-9]+" arxiv-number)
   (setq arxiv-number (match-string 0 arxiv-number))
-  (arxiv-add-bibtex-entry arxiv-number bibfile)
+  (arxiv-add-bibtex-entry-async arxiv-number bibfile)
 
   (save-window-excursion
     (let ((key ""))
@@ -390,7 +390,7 @@ key."
         (setq key (bibtex-read-key "Key not found, insert: ")))
       (insert key)
       (save-some-buffers bibfile)
-      (arxiv-get-pdf arxiv-number (concat pdfdir key ".pdf")))))
+      (arxiv-get-pdf-async arxiv-number (concat pdfdir key ".pdf")))))
 
 (provide 'org-ref-arxiv-async)
-;;; org-ref-arxiv.el ends here
+;;; org-ref-arxiv-async.el ends here
