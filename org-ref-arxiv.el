@@ -328,7 +328,7 @@ Returns a formatted BibTeX entry."
 
 
 ;;;###autoload
-(defun arxiv-get-pdf (arxiv-number pdf)
+(defun arxiv-get-pdf-async (arxiv-number pdf)
   "Retrieve a pdf for ARXIV-NUMBER and save it to PDF."
   (interactive "sarxiv: \nsPDF: ")
   (let ((pdf-url (with-current-buffer
@@ -344,7 +344,7 @@ Returns a formatted BibTeX entry."
     ))
 
 ;;;###autoload
-(defun arxiv-get-pdf-add-bibtex-entry (arxiv-number bibfile pdfdir)
+(defun arxiv-get-pdf-add-bibtex-entry-async (arxiv-number bibfile pdfdir)
   "Add bibtex entry for ARXIV-NUMBER to BIBFILE.
 Remove troublesome chars from the bibtex key, retrieve a pdf
 for ARXIV-NUMBER and save it to PDFDIR with the same name of the
