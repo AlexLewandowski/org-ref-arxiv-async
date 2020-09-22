@@ -102,7 +102,11 @@ have fields sorted alphabetically."
                "\n}\n\n"))
       (bibtex-find-entry key)
       (bibtex-fill-entry)
-      (bibtex-clean-entry)))
+      (bibtex-clean-entry)
+      (let ((+my-tmp-value (bibtex-autokey-get-field "eprint")))
+       (if (not (= (length +my-tmp-value) 0))
+           (bibtex-set-field "journal" (concat "arXiv:" +my-tmp-value))))
+     ))
 
   "Replace the key in the entry.
 Prompts for replacement if the new key duplicates one already in
